@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+    
+        
+        #formulario {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+    
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #4A90E2;
+        }
+    
+        
+        #text {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+    
+        #text:focus {
+            border-color: #4A90E2;
+            outline: none;
+        }
+    
+        
+        button {
+            background-color: #4A90E2;
+            color: #fff;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            padding: 12px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+    
+        button:hover {
+            background-color: #357ABD;
+        }
+    
+        
+        #resultado {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+    
+        #resultado ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+    
+        #resultado li {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+    
+        #resultado li:last-child {
+            border-bottom: none;
+        }
+    
+        #resultado li strong {
+            color: #4A90E2;
+        }
+    
+       
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <form id="formulario">
+        <h1>Busca un país</h1>
+        <input type="text" name="text" id="text" placeholder="Ingresa un país">
+        <button type="submit">Enviar</button>
+    </form>
+    <div id="resultado"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function(){
+            /**
+             * Función que valida el texto ingresado en el campo de búsqueda
+             * Reemplaza cualquier carácter que no sea letra (A-Z o a-z).
+             * @return {void} No retorna ningún valor, solo modifica el campo de texto.
+             */
+            function validar(){
+                const campoTxt = $("#text")[0];
+                
+                campoTxt.value = campoTxt.value.replace(/[^A-Za-z]/g, "");
+            }
+
+            /**
+             * Maneja el envío del formulario.
+             * Realiza la validación del campo de texto y luego realiza una solicitud GET
+             * a una API para buscar países.
+             * @param {Event} event - El evento de envío del formulario.
+             * @return {void} No retorna ningún valor, solo maneja la solicitud y muestra resultados.
+             */
+            $("#formulario").submit(function (event) {
+                event.preventDefault(); 
+                
+                
+                validar();
+
+                var buscar = $("#text").val();
+
+                
+                if (buscar.trim() === "") {
+                    $("#resultado").html('<p class="error">Por favor, ingrese un texto para buscar.</p>').show();
+                    return;
+                }
+
+                /**
+                 * Realiza una solicitud GET para buscar países basándose en un texto de búsqueda.
+                 * @param {string} buscar - El nombre del país que se desea buscar.
+                 * @return {void} No retorna un valor directo, solo manipula el DOM con los resultados.
+                 */
+                $.get('https://api.thecompaniesapi.com/v2/locations/countries?search=' + buscar, function(dato){
+                    if (dato.countries && dato.countries.length > 0) {
+                        $("#resultado").html(`
+                            <h3>Resultado:</h3>
+                            <ul>
+                                ${dato.countries.map(function (pais) {
+                                    return `<li><strong>${pais.code}</strong> - ${pais.name} - ${pais.population}</li>`;
+                                }).join('')}
+                            </ul>
+                        `).show();
+                    } else {
+                        $("#resultado").html('<p>No se encontraron resultados.</p>').show();
+                    }
+                }).fail(function() {
+                    $("#resultado").html('<p class="error">Error al cargar los datos desde la API.</p>').show();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
